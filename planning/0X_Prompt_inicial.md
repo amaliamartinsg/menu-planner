@@ -69,12 +69,12 @@ archivos en este orden:
 
 # TAREA INICIAL
 
-Continúa por la **FASE 2 — Backend CRUD de Recetas** definida en 04_PLAN_FASES.md.
+Continúa por la **FASE 4 — Backend: Perfil y TDEE** definida en 04_PLAN_FASES.md.
 
 Lee primero los checkboxes de esa fase y luego implementa cada punto en orden,
 confirmando cada uno antes de pasar al siguiente.
 
-El objetivo al final de la Fase 1 es:
-- Todos los endpoints de recetas funcionan y son testeable en Swagger.
+El objetivo al final de la Fase 4 es:
+-  El perfil calcula TDEE/BMR automáticamente y define los targets de macros.
 
 Cuando termines cada archivo o grupo de archivos relacionados, no esperes mi confirmación antes de continuar con el siguiente. Cuando completes la fase entera, avísame de las comprobaciones que debo seguir para comprobar si está todo correcto.

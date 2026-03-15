@@ -11,8 +11,8 @@
 FASE 0  [██████████] 100% Setup
 FASE 1  [██████████] 100% Modelos BD
 FASE 2  [██████████] 100% Backend Recetas
-FASE 3  [          ] 0%   Backend Menú
-FASE 4  [          ] 0%   Backend Perfil
+FASE 3  [██████████] 100% Backend Menú
+FASE 4  [██████████] 100% Backend Perfil
 FASE 5  [          ] 0%   Frontend Base
 FASE 6  [          ] 0%   Frontend Recetas
 FASE 7  [          ] 0%   Frontend Menú
@@ -137,32 +137,32 @@ FASE 9  [          ] 0%   Polish & Testing
 > **Duración estimada:** 1-2 sesiones
 
 ### Lógica core
-- [ ] Crear `app/core/menu_generator.py`
-  - [ ] Función `get_slot_macro_budget(day_macros: MacroTotals, slot_type: SlotType, target: MacroTotals) -> MacroTotals`
-  - [ ] Función `filter_compatible_recipes(recipes: list[Recipe], slot_type: SlotType, budget: MacroTotals) -> list[Recipe]`
-  - [ ] Función `autofill_week(week: MenuWeek, recipes: list[Recipe], target: MacroTotals) -> list[SlotUpdate]`
-  - [ ] Tests básicos de la lógica en `app/core/tests/test_menu_generator.py`
+- [x] Crear `app/core/menu_generator.py`
+  - [x] Función `get_slot_macro_budget(day_macros: MacroTotals, slot_type: SlotType, target: MacroTotals) -> MacroTotals`
+  - [x] Función `filter_compatible_recipes(recipes: list[Recipe], slot_type: SlotType, budget: MacroTotals) -> list[Recipe]`
+  - [x] Función `autofill_week(week: MenuWeek, recipes: list[Recipe], target: MacroTotals) -> list[SlotUpdate]`
+  - [x] Tests básicos de la lógica en `app/core/tests/test_menu_generator.py`
 
 ### Router de menú
-- [ ] Crear `app/backend/routers/menu.py`
-- [ ] `GET /menu/weeks` — listar semanas con resumen (fecha, % completitud)
-- [ ] `GET /menu/week/{week_start}` — semana completa con:
+- [x] Crear `app/backend/routers/menu.py`
+- [x] `GET /menu/weeks` — listar semanas con resumen (fecha, % completitud)
+- [x] `GET /menu/week/{week_start}` — semana completa con:
   - Slots con recetas y sus macros
   - Extras del día con sus macros
   - Macros totales por día (`DayMacrosSummary`)
-- [ ] `POST /menu/week` — crear semana nueva (genera los 5 días con 5 slots vacíos cada uno)
-- [ ] `PUT /menu/slot/{slot_id}` — asignar `recipe_id` (o `null` para vaciar)
-- [ ] `DELETE /menu/slot/{slot_id}` — alias de PUT con recipe_id=null
-- [ ] `POST /menu/week/{week_start}/autofill` — rellenar solo los slots vacíos
-- [ ] Registrar router en `app/backend/main.py`
+- [x] `POST /menu/week` — crear semana nueva (genera los 5 días con 5 slots vacíos cada uno)
+- [x] `PUT /menu/slot/{slot_id}` — asignar `recipe_id` (o `null` para vaciar)
+- [x] `DELETE /menu/slot/{slot_id}` — alias de PUT con recipe_id=null
+- [x] `POST /menu/week/{week_start}/autofill` — rellenar solo los slots vacíos
+- [x] Registrar router en `app/backend/main.py`
 
 ### Router de extras
-- [ ] Crear `app/backend/routers/extras.py`
-- [ ] `GET /extras` — listar todos los extras predefinidos
-- [ ] `POST /extras`, `PUT /extras/{id}`, `DELETE /extras/{id}`
-- [ ] `POST /menu/day/{day_id}/extras` — añadir extra al día con `quantity`
-- [ ] `DELETE /menu/day-extra/{id}` — quitar extra del día
-- [ ] Registrar router en `app/backend/main.py`
+- [x] Crear `app/backend/routers/extras.py`
+- [x] `GET /extras` — listar todos los extras predefinidos
+- [x] `POST /extras`, `PUT /extras/{id}`, `DELETE /extras/{id}`
+- [x] `POST /menu/day/{day_id}/extras` — añadir extra al día con `quantity`
+- [x] `DELETE /menu/day-extra/{id}` — quitar extra del día
+- [x] Registrar router en `app/backend/main.py`
 
 ---
 
@@ -172,20 +172,20 @@ FASE 9  [          ] 0%   Polish & Testing
 > **Dependencias:** FASE 1 completa  
 > **Duración estimada:** 0.5 sesiones (módulo pequeño)
 
-- [ ] Crear `app/core/tdee.py`
-  - [ ] Función `calculate_bmr(weight_kg, height_cm, age, gender) -> float` — fórmula Mifflin-St Jeor
-  - [ ] Función `calculate_tdee(bmr, activity_level: ActivityLevel) -> float` — multiplicadores
-  - [ ] Función `apply_goal(tdee, goal: Goal) -> float` — déficit/mantenimiento/superávit
-  - [ ] Tests en `app/core/tests/test_tdee.py`
-- [ ] Crear `app/core/macro_targets.py`
-  - [ ] Función `calculate_macro_grams(kcal_target, prot_pct, hc_pct, fat_pct) -> MacroGrams`
-  - [ ] Fórmula: prot_g = (kcal_target * prot_pct/100) / 4 ; hc_g / 4 ; fat_g / 9
-- [ ] Crear `app/backend/routers/profile.py`
-  - [ ] `GET /profile` — devolver perfil actual con todos los targets calculados
-  - [ ] `PUT /profile` — actualizar, recalcular TDEE y macro_g_targets, guardar en BD
-  - [ ] `POST /profile/calculate-tdee` — preview sin guardar (útil para la UI en tiempo real)
-- [ ] Registrar router en `app/backend/main.py`
-- [ ] Testar en Swagger: modificar perfil y verificar que kcal_target se recalcula
+- [x] Crear `app/core/tdee.py`
+  - [x] Función `calculate_bmr(weight_kg, height_cm, age, gender) -> float` — fórmula Mifflin-St Jeor
+  - [x] Función `calculate_tdee(bmr, activity_level: ActivityLevel) -> float` — multiplicadores
+  - [x] Función `apply_goal(tdee, goal: Goal) -> float` — déficit/mantenimiento/superávit
+  - [x] Tests en `app/core/tests/test_tdee.py`
+- [x] Crear `app/core/macro_targets.py`
+  - [x] Función `calculate_macro_grams(kcal_target, prot_pct, hc_pct, fat_pct) -> MacroGrams`
+  - [x] Fórmula: prot_g = (kcal_target * prot_pct/100) / 4 ; hc_g / 4 ; fat_g / 9
+- [x] Crear `app/backend/routers/profile.py`
+  - [x] `GET /profile` — devolver perfil actual con todos los targets calculados
+  - [x] `PUT /profile` — actualizar, recalcular TDEE y macro_g_targets, guardar en BD
+  - [x] `POST /profile/calculate-tdee` — preview sin guardar (útil para la UI en tiempo real)
+- [x] Registrar router en `app/backend/main.py`
+- [x] Testar en Swagger: modificar perfil y verificar que kcal_target se recalcula
 
 ---
 

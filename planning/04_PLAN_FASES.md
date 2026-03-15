@@ -13,7 +13,7 @@ FASE 1  [██████████] 100% Modelos BD
 FASE 2  [██████████] 100% Backend Recetas
 FASE 3  [██████████] 100% Backend Menú
 FASE 4  [██████████] 100% Backend Perfil
-FASE 5  [          ] 0%   Frontend Base
+FASE 5  [██████████] 100% Frontend Base
 FASE 6  [          ] 0%   Frontend Recetas
 FASE 7  [          ] 0%   Frontend Menú
 FASE 8  [          ] 0%   Frontend Ajustes
@@ -195,27 +195,27 @@ FASE 9  [          ] 0%   Polish & Testing
 > **Dependencias:** FASE 0 + FASE 1 (necesita la BD con seed)
 > **Duración estimada:** 1 sesión
 
-- [ ] Crear proyecto React con Vite dentro de `app/frontend/`:
-  - [ ] `npm create vite@latest . -- --template react-ts` (desde `app/frontend/`)
-  - [ ] Instalar dependencias del `package.json` definido en `05_DEPENDENCIAS.md`
-- [ ] Configurar `vite.config.ts` con proxy `/api` → `http://localhost:8000`
-- [ ] Crear `src/api/client.ts` — instancia Axios con `baseURL` desde `import.meta.env.VITE_BACKEND_URL`
-  - [ ] Interceptor de respuesta: extraer mensaje de error de FastAPI y relanzar como `Error`
-- [ ] Crear `src/theme.ts` — tema MUI con color primario (`#4CAF50` verde o `#FF7043` naranja)
-- [ ] Configurar `src/main.tsx`:
-  - [ ] `<QueryClientProvider>` con `QueryClient` (staleTime: 30s)
-  - [ ] `<ThemeProvider>` con el tema definido
-  - [ ] `<BrowserRouter>` de React Router
-- [ ] Crear `src/App.tsx` con layout principal:
-  - [ ] `<BottomNavigation>` de MUI con 3 tabs (Recetas / Menú / Ajustes)
-  - [ ] `<Routes>` con rutas: `/` → RecipesView, `/menu` → MenuView, `/settings` → SettingsView
-  - [ ] Sincronizar tab activo con la ruta actual (`useLocation`)
-- [ ] Crear vistas placeholder en `src/views/`:
-  - [ ] `RecipesView.tsx` — título + "En construcción"
-  - [ ] `MenuView.tsx` — título + "En construcción"
-  - [ ] `SettingsView.tsx` — título + "En construcción"
-- [ ] Verificar que la navegación entre tabs funciona sin errores en el navegador
-- [ ] Verificar que `src/api/client.ts` puede hacer un `GET /profile` y recibir datos del backend
+- [x] Crear proyecto React con Vite dentro de `app/frontend/`:
+  - [x] `npm create vite@latest . -- --template react-ts` (desde `app/frontend/`)
+  - [x] Instalar dependencias del `package.json` definido en `05_DEPENDENCIAS.md`
+- [x] Configurar `vite.config.ts` con proxy `/api` → `http://localhost:8000`
+- [x] Crear `src/api/client.ts` — instancia Axios con `baseURL` desde `import.meta.env.VITE_BACKEND_URL`
+  - [x] Interceptor de respuesta: extraer mensaje de error de FastAPI y relanzar como `Error`
+- [x] Crear `src/theme.ts` — tema MUI con color primario (`#4CAF50` verde o `#FF7043` naranja)
+- [x] Configurar `src/main.tsx`:
+  - [x] `<QueryClientProvider>` con `QueryClient` (staleTime: 30s)
+  - [x] `<ThemeProvider>` con el tema definido
+  - [x] `<BrowserRouter>` de React Router
+- [x] Crear `src/App.tsx` con layout principal:
+  - [x] `<BottomNavigation>` de MUI con 3 tabs (Recetas / Menú / Ajustes)
+  - [x] `<Routes>` con rutas: `/` → RecipesView, `/menu` → MenuView, `/settings` → SettingsView
+  - [x] Sincronizar tab activo con la ruta actual (`useLocation`)
+- [x] Crear vistas placeholder en `src/views/`:
+  - [x] `RecipesView.tsx` — título + "En construcción"
+  - [x] `MenuView.tsx` — título + "En construcción"
+  - [x] `SettingsView.tsx` — título + "En construcción"
+- [x] Verificar que la navegación entre tabs funciona sin errores en el navegador
+- [x] Verificar que `src/api/client.ts` puede hacer un `GET /profile` y recibir datos del backend
 
 ---
 

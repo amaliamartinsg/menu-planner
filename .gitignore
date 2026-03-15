@@ -33,5 +33,9 @@ Thumbs.db
 # Logs
 *.log
 
-#Added 
+#Added
 .claude/
+
+# Frontend React
+app/frontend/node_modules/
+app/frontend/dist/

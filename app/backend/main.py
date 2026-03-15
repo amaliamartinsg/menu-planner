@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.backend.database import create_db_and_tables
-from app.backend.routers import categories, recipes
+from app.backend.routers import categories, extras, menu, recipes
 
 
 @asynccontextmanager
@@ -35,6 +35,8 @@ app.add_middleware(
 
 app.include_router(recipes.router)
 app.include_router(categories.router)
+app.include_router(menu.router)
+app.include_router(extras.router)
 
 
 @app.get("/health", tags=["health"])

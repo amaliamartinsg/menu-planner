@@ -60,7 +60,7 @@ EXTRAS: list[dict] = [
 ]
 
 # ---------------------------------------------------------------------------
-# Sample recipes (macros are pre-filled; in production Edamam computes them)
+# Sample recipes (macros are pre-filled; in production USDA computes them)
 # ---------------------------------------------------------------------------
 
 RECIPES: list[dict] = [

@@ -29,7 +29,7 @@ class IngredientRead(BaseModel):
 class RecipeCreate(BaseModel):
     """Payload to create a new Recipe.
 
-    Macro totals are computed server-side via Edamam — do not send them.
+    Macro totals are computed server-side via USDA FoodData Central — do not send them.
     """
 
     name: str
@@ -68,6 +68,26 @@ class RecipeRead(BaseModel):
     ingredients: list[IngredientRead] = []
 
     model_config = {"from_attributes": True}
+
+
+class RecipeSuggestionIngredient(BaseModel):
+    """A single ingredient line within a GPT-suggested recipe."""
+
+    name: str
+    quantity_g: float
+
+
+class RecipeSuggestion(BaseModel):
+    """Structured recipe suggestion returned by the OpenAI service.
+
+    Validated directly from the JSON produced by GPT-4o mini.
+    """
+
+    name: str
+    category_suggestion: str | None = None
+    servings: int = 1
+    instructions_text: str | None = None
+    ingredients: list[RecipeSuggestionIngredient] = []
 
 
 class RecipeSummary(BaseModel):

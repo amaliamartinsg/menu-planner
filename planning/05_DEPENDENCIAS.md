@@ -18,7 +18,7 @@ python-dotenv>=1.0.0       # Carga el archivo .env
 # ─────────────────────────────────────────
 # INTEGRACIONES EXTERNAS
 # ─────────────────────────────────────────
-httpx>=0.27.0              # Cliente HTTP async (Edamam, Unsplash)
+httpx>=0.27.0              # Cliente HTTP async (USDA, Unsplash)
 openai>=1.30.0             # SDK oficial OpenAI (GPT-4o mini)
 
 # ─────────────────────────────────────────
@@ -200,8 +200,7 @@ pip freeze > requirements.txt
 
 | Variable | Requerida | Descripción |
 |---|---|---|
-| `EDAMAM_APP_ID` | ✅ Sí | ID de la app de Edamam |
-| `EDAMAM_APP_KEY` | ✅ Sí | Clave secreta de Edamam |
+| `USDA_API_KEY` | ✅ Sí | Clave de USDA FoodData Central |
 | `UNSPLASH_ACCESS_KEY` | ✅ Sí | Access key de Unsplash |
 | `OPENAI_API_KEY` | ✅ Sí | Clave de OpenAI |
 | `BACKEND_URL` | ⚠️ Opcional | URL del backend (default: `http://localhost:8000`) |

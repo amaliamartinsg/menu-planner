@@ -1,0 +1,12 @@
+{
+  "name": "Tortilla de patatas",
+  "servings": 2,
+  "subcategory_id": null,
+  "instructions_text": "Pelar y cortar las patatas, batir los huevos, mezclar y cuajar a fuego medio.",
+  "image_url": null,
+  "ingredients": [
+    { "name": "huevo", "quantity_g": 150 },
+    { "name": "patata", "quantity_g": 300 },
+    { "name": "aceite de oliva", "quantity_g": 20 }
+  ]
+}

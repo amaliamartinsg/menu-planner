@@ -13,7 +13,7 @@
 | Base de datos | **SQLite + SQLModel** | Sin servidor, perfecto para uso local; SQLModel unifica modelos BD + Pydantic |
 | Frontend | **Flet** | Python puro, Material Design 3, multiplataforma |
 | Comunicación | **HTTP (httpx)** | FastAPI server en `localhost:8000` + Flet como cliente HTTP |
-| Macros ingredientes | **Edamam Nutrition API** | Gratuita (100 calls/día), suficiente para uso personal |
+| Macros ingredientes | **USDA FoodData Central** | Completamente gratuita y sin límite diario práctico |
 | Imágenes | **Unsplash API** | Gratuita (50 req/hora), alta calidad |
 | IA Despensa Virtual | **OpenAI GPT-4o mini** | Muy barato (~0.15$/1M tokens), buena calidad para recetas |
 
@@ -39,9 +39,11 @@
 - Reutilizable si se cambia el framework en el futuro
 - Módulos en `app/core/`: cálculos TDEE, conversión macros, algoritmo generador de menú
 
-### ¿Por qué Edamam siempre (sin caché local inicial)?
-- 100 calls/día gratis es suficiente para uso personal en MVP
-- **Mejora planificada en Fase 9**: añadir caché en SQLite — si el mismo ingrediente ya fue consultado, reutilizar resultado guardado
+### ¿Por qué USDA FoodData Central para macros?
+- Completamente gratuita, sin límite diario práctico ni tarjeta requerida
+- Base de datos oficial del gobierno de EE.UU. — alta fiabilidad para ingredientes crudos
+- Los nombres en español se traducen automáticamente a inglés con GPT-4o mini antes de consultar
+- **Mejora planificada en Fase 9**: añadir caché en SQLite — si el mismo ingrediente ya fue consultado, reutilizar resultado sin llamadas externas
 
 ---
 
@@ -109,7 +111,7 @@ Los 5 slots son **fijos** (no configurables en el MVP):
 
 | Limitación | Solución futura |
 |---|---|
-| Edamam: 100 calls/día | Caché de ingredientes en SQLite (Fase 9) |
+| USDA: base de datos en inglés | Traducción automática con GPT-4o mini (ya implementado) |
 | Sin búsqueda de recetas por texto libre | Añadir full-text search con SQLite FTS5 |
 | OpenAI requiere saldo | Migrar a Ollama local si el coste molesta |
 | Sin sincronización cloud | Exportar/importar DB como backup |

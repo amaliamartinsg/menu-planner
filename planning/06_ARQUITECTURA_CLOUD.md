@@ -16,7 +16,7 @@ Para maximizar el rendimiento y minimizar costes (aprovechando los $300 de prueb
 * *Uso:* Guardar las fotos de las recetas que elijas. Los primeros 5GB son gratuitos.
 
 ### 4. Gestión de Secretos e IA
-* *Secret Manager:* Para guardar las API Keys de Edamam (macros) y OpenAI (sugerencias) de forma segura.
+* *Secret Manager:* Para guardar las API Keys de USDA (macros), Unsplash (imágenes) y OpenAI (sugerencias + traducción) de forma segura.
 * *Cloud Build:* Para el despliegue automático (CI/CD) desde tu repositorio de GitHub.
 
 ### 5. Red y Acceso

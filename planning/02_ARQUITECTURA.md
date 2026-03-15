@@ -42,7 +42,7 @@ pyplanner/                             # Raíz del proyecto
     │   │   └── profile.py             # /profile
     │   └── services/                  # Lógica de negocio + integraciones externas
     │       ├── __init__.py
-    │       ├── edamam.py              # Nutrition Analysis API
+    │       ├── usda.py                # USDA FoodData Central — macros por ingrediente
     │       ├── unsplash.py            # Image Search API
     │       ├── openai_service.py      # GPT-4o mini — Despensa Virtual
     │       └── macro_calculator.py    # Suma macros de ingredientes → receta
@@ -91,7 +91,7 @@ Profile          (tabla única, id=1)
 Category (1) ──→ (N) SubCategory
 SubCategory (1) ──→ (N) Recipe
 Recipe (1) ──→ (N) RecipeIngredient
-    └── macros calculados por Edamam al guardar
+    └── macros calculados por USDA al guardar
 
 MenuWeek (1) ──→ (5) MenuDay  [Lun-Vie]
 MenuDay  (1) ──→ (5) MenuSlot [Desayuno, MediaMañana, Comida, Merienda, Cena]
@@ -141,7 +141,7 @@ class RecipeIngredient(SQLModel, table=True):
     recipe_id: int = Field(foreign_key="recipe.id")
     name: str                         # "Pechuga de pollo"
     quantity_g: float                 # 150.0 (gramos)
-    # Macros por 100g (devueltos por Edamam, guardados para recálculo)
+    # Macros por 100g (devueltos por USDA, guardados para recálculo)
     kcal_100g: float = Field(default=0)
     prot_100g: float = Field(default=0)
     hc_100g: float = Field(default=0)
@@ -242,7 +242,7 @@ class Profile(SQLModel, table=True):
 |---|---|---|
 | GET | `/recipes` | Listado con filtros `?category_id=&subcategory_id=&search=` |
 | GET | `/recipes/{id}` | Detalle de una receta |
-| POST | `/recipes` | Crear receta (triggerea cálculo macros vía Edamam) |
+| POST | `/recipes` | Crear receta (triggerea cálculo macros vía USDA) |
 | PUT | `/recipes/{id}` | Editar receta |
 | DELETE | `/recipes/{id}` | Eliminar receta |
 | POST | `/recipes/suggest` | Despensa Virtual — GPT-4o mini |

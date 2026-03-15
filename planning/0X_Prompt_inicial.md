@@ -43,7 +43,7 @@ archivos en este orden:
 - Separa siempre la lógica de negocio (services/) de los endpoints (routers/)
 
 ## Gestión de errores
-- Todos los servicios externos (Edamam, Unsplash, OpenAI) deben tener 
+- Todos los servicios externos (USDA, Unsplash, OpenAI) deben tener
   try/except con errores tipados y mensajes claros
 - El frontend debe mostrar siempre feedback visual al usuario cuando una 
   llamada falla (ft.SnackBar)
@@ -75,6 +75,6 @@ Lee primero los checkboxes de esa fase y luego implementa cada punto en orden,
 confirmando cada uno antes de pasar al siguiente.
 
 El objetivo al final de la Fase 1 es:
-- Todas las tablas existen en SQLite. El seed carga datos iniciales. 
+- Todos los endpoints de recetas funcionan y son testeable en Swagger.
 
 Cuando termines cada archivo o grupo de archivos relacionados, no esperes mi confirmación antes de continuar con el siguiente. Cuando completes la fase entera, avísame de las comprobaciones que debo seguir para comprobar si está todo correcto.

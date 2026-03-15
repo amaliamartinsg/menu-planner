@@ -10,7 +10,7 @@
 ```
 FASE 0  [██████████] 100% Setup
 FASE 1  [██████████] 100% Modelos BD
-FASE 2  [          ] 0%   Backend Recetas
+FASE 2  [██████████] 100% Backend Recetas
 FASE 3  [          ] 0%   Backend Menú
 FASE 4  [          ] 0%   Backend Perfil
 FASE 5  [          ] 0%   Frontend Base
@@ -85,44 +85,48 @@ FASE 9  [          ] 0%   Polish & Testing
 > **Duración estimada:** 1-2 sesiones
 
 ### Servicios de integración
-- [ ] Crear `app/backend/services/edamam.py`
-  - [ ] Función `get_nutrition(ingredients: list[str]) -> NutritionResult`
-  - [ ] Manejo de error 555 (ingrediente no reconocido) con fallback a 0
-  - [ ] Conversión de respuesta al formato interno (kcal, prot_g, hc_g, fat_g)
-- [ ] Crear `app/backend/services/unsplash.py`
-  - [ ] Función `search_images(query: str, count: int = 5) -> list[str]`
-  - [ ] Traducción simple del query (opcional: usar GPT-4o mini para traducir)
-- [ ] Crear `app/backend/services/openai_service.py`
-  - [ ] Función `suggest_recipe(ingredients: list[str]) -> RecipeSuggestion`
-  - [ ] Prompt estructurado que devuelve JSON (ver `03_APIS_EXTERNAS.md`)
-  - [ ] Validación del JSON devuelto con Pydantic
-  - [ ] Manejo de error si el JSON es inválido (reintento con temperature=0)
-- [ ] Crear `app/backend/services/macro_calculator.py`
-  - [ ] Función `calculate_recipe_macros(ingredients: list[RecipeIngredient]) -> MacroTotals`
-  - [ ] Fórmula: `(quantity_g / 100) * macro_100g` por cada ingrediente → sumar
+- [x] Crear `app/backend/services/usda.py`
+  - [x] Función `get_nutrition(ingredient_name: str, quantity_g: float) -> NutritionResult`
+  - [x] Traducción automática del nombre a inglés con GPT-4o mini antes de consultar USDA
+  - [x] Caché en memoria `_translation_cache` para no repetir traducciones idénticas
+  - [x] Fallback a `NutritionResult` con todos 0 si ingrediente no encontrado
+  - [x] Conversión de respuesta al formato interno (kcal, prot_g, hc_g, fat_g)
+  - [x] Error 403 si `USDA_API_KEY` es inválida; 502 para otros errores de red
+- [x] Crear `app/backend/services/unsplash.py`
+  - [x] Función `search_images(query: str, count: int = 5) -> list[str]`
+  - [x] Error 403 si `UNSPLASH_ACCESS_KEY` es inválida (HTTP 401 de Unsplash → 403)
+- [x] Crear `app/backend/services/openai_service.py`
+  - [x] Función `suggest_recipe(ingredients: list[str]) -> RecipeSuggestion`
+  - [x] Prompt estructurado que devuelve JSON (ver `03_APIS_EXTERNAS.md`)
+  - [x] Validación del JSON devuelto con Pydantic
+  - [x] Reintento con `temperature=0` si el JSON es inválido
+  - [x] Error 403 si `OPENAI_API_KEY` es inválida
+- [x] Crear `app/backend/services/macro_calculator.py`
+  - [x] Función `calculate_recipe_macros(ingredients: list[RecipeIngredient]) -> MacroTotals`
+  - [x] Fórmula: `(quantity_g / 100) * macro_100g` por cada ingrediente → sumar
 
 ### Router de recetas
-- [ ] Crear `app/backend/routers/recipes.py`
-- [ ] `GET /recipes` con filtros opcionales: `?category_id=`, `?subcategory_id=`, `?search=`
-- [ ] `GET /recipes/{id}` con ingredientes incluidos
-- [ ] `POST /recipes` — flujo completo:
+- [x] Crear `app/backend/routers/recipes.py`
+- [x] `GET /recipes` con filtros opcionales: `?category_id=`, `?subcategory_id=`, `?search=`
+- [x] `GET /recipes/{id}` con ingredientes incluidos
+- [x] `POST /recipes` — flujo completo:
   1. Recibir `RecipeCreate` con lista de ingredientes
-  2. Llamar a Edamam para cada ingrediente → guardar macros en `RecipeIngredient`
+  2. Para cada ingrediente: traducir nombre a inglés (GPT-4o mini) → consultar USDA → guardar macros en `RecipeIngredient`
   3. Calcular macros totales de la receta → guardar en `Recipe`
   4. Devolver `RecipeRead`
-- [ ] `PUT /recipes/{id}` — recalcular macros si cambian ingredientes
-- [ ] `DELETE /recipes/{id}` — eliminar en cascada (ingredientes)
-- [ ] `POST /recipes/suggest` — recibir lista de ingredientes, llamar a OpenAI, devolver borrador
-- [ ] `GET /recipes/images?query=` — buscar en Unsplash, devolver lista de URLs
-- [ ] Registrar router en `app/backend/main.py`
-- [ ] Testar todos los endpoints en Swagger UI
+- [x] `PUT /recipes/{id}` — recalcular macros si cambian ingredientes
+- [x] `DELETE /recipes/{id}` — eliminar en cascada (ingredientes)
+- [x] `POST /recipes/suggest` — recibir lista de ingredientes, llamar a OpenAI, devolver borrador
+- [x] `GET /recipes/images?query=` — buscar en Unsplash, devolver lista de URLs
+- [x] Registrar router en `app/backend/main.py`
+- [x] Testar todos los endpoints en Swagger UI
 
 ### Router de categorías
-- [ ] Crear `app/backend/routers/categories.py`
-- [ ] `GET /categories` — árbol completo (categorías con sus subcategorías)
-- [ ] `POST /categories`, `PUT /categories/{id}`, `DELETE /categories/{id}`
-- [ ] `POST /categories/{id}/subcategories`, `PUT /subcategories/{id}`, `DELETE /subcategories/{id}`
-- [ ] Registrar router en `app/backend/main.py`
+- [x] Crear `app/backend/routers/categories.py`
+- [x] `GET /categories` — árbol completo (categorías con sus subcategorías)
+- [x] `POST /categories`, `PUT /categories/{id}`, `DELETE /categories/{id}`
+- [x] `POST /categories/{id}/subcategories`, `PUT /subcategories/{id}`, `DELETE /subcategories/{id}`
+- [x] Registrar router en `app/backend/main.py`
 
 ---
 
@@ -339,10 +343,11 @@ FASE 9  [          ] 0%   Polish & Testing
   - [ ] Perfil: peso/altura/edad en rangos razonables, porcentajes suman 100%
   - [ ] Extras: nombre obligatorio, kcal > 0
 
-### Caché de ingredientes (mejora Edamam)
-- [ ] Añadir tabla `IngredientCache` en BD: `(name_normalized, kcal_100g, prot_100g, hc_100g, fat_100g)`
-- [ ] En `app/backend/services/edamam.py`: antes de llamar a la API, buscar en caché → si existe, devolver sin llamada
+### Caché de ingredientes (mejora USDA + traducción)
+- [ ] Añadir tabla `IngredientCache` en BD: `(name_normalized, name_en, kcal_100g, prot_100g, hc_100g, fat_100g)`
+- [ ] En `app/backend/services/usda.py`: antes de traducir y llamar a USDA, buscar en BD → si existe, devolver sin llamadas externas
 - [ ] Normalizar nombre: minúsculas + strip → evitar duplicados por capitalización
+- [ ] La caché en BD persiste entre reinicios del servidor (distinta de la `_translation_cache` en memoria)
 
 ### Testing end-to-end
 - [ ] Flujo 1: Crear receta manualmente → verificar macros calculados → asignar a menú

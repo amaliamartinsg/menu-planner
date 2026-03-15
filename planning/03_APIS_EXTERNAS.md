@@ -8,19 +8,18 @@
 ## Checklist de Configuración
 
 - [X] Crear archivo `.env` en la raíz del proyecto
-- [ ] Registrarse en Edamam y obtener claves
-- [ ] Registrarse en Unsplash y obtener clave
-- [ ] Crear cuenta OpenAI y añadir saldo
-- [ ] Verificar que las 3 APIs responden correctamente (scripts de test abajo)
+- [X] Registrarse en USDA FoodData Central y obtener clave
+- [X] Registrarse en Unsplash y obtener clave
+- [X] Crear cuenta OpenAI y añadir saldo
+- [X] Verificar que las 3 APIs responden correctamente
 
 ---
 
 ## `.env.example` (copiar como `.env` y rellenar)
 
 ```env
-# Edamam Nutrition Analysis API
-EDAMAM_APP_ID=xxxxxxxx
-EDAMAM_APP_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# USDA FoodData Central (macros de ingredientes)
+USDA_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # Unsplash
 UNSPLASH_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -35,172 +34,201 @@ DATABASE_URL=sqlite:///./recipe_manager.db
 
 ---
 
-## 1. Edamam — Nutrition Analysis API
+## 1. USDA FoodData Central — Nutrition API
 
-**Tier gratuito:** 100 calls/día ✅  
-**Uso en el proyecto:** Calcular macros de ingredientes al guardar una receta
+**Tier gratuito:** ✅ Completamente gratuito, sin límite diario práctico
+**Uso en el proyecto:** Obtener macros por 100g de cada ingrediente al guardar una receta
+
+> ⚠️ **Nota:** Edamam fue descartado por requerir tarjeta incluso en el plan básico.
+> Se migró a USDA FoodData Central, que es completamente gratuito.
 
 ### Pasos de registro
 
-- [ ] Ir a [developer.edamam.com](https://developer.edamam.com)
-- [ ] Crear cuenta gratuita
-- [ ] Ir a "Dashboard" → "Applications"
-- [ ] Click en **"Create a new application"**
-- [ ] Seleccionar: **"Nutrition Analysis API"** (NO la Recipe Search API)
-- [ ] Nombre: `recipe-manager-mvp`
-- [ ] Copiar `Application ID` → `EDAMAM_APP_ID`
-- [ ] Copiar `Application Keys` → `EDAMAM_APP_KEY`
+- [X] Ir a [fdc.nal.usda.gov/api-guide.html](https://fdc.nal.usda.gov/api-guide.html)
+- [X] Crear cuenta gratuita y solicitar API key
+- [X] Copiar la clave → `USDA_API_KEY`
+
+### Flujo real implementado
+
+La base de datos de USDA es en inglés, por lo que los nombres de ingredientes
+se traducen automáticamente con GPT-4o mini antes de consultar la API:
+
+```
+"pechuga de pollo"
+       ↓
+  GPT-4o mini (temperature=0, max_tokens=20)
+       ↓
+  "chicken breast"
+       ↓
+  USDA FoodData Central
+       ↓
+  NutritionResult(kcal_100g=165, prot_100g=31, hc_100g=0, fat_100g=3.6)
+```
+
+Las traducciones se cachean en memoria (`_translation_cache`) para no
+repetir llamadas con el mismo ingrediente durante la sesión del servidor.
 
 ### Ejemplo de llamada
 
 ```python
-# POST https://api.edamam.com/api/nutrition-details
-# Body: { "ingr": ["150g chicken breast", "100g brown rice"] }
+# GET https://api.nal.usda.gov/fdc/v1/foods/search
+# Params: query="chicken breast", api_key=KEY, pageSize=1, dataType="Foundation,SR Legacy"
 
-import httpx
-
-async def get_nutrition(ingredients: list[str]) -> dict:
-    url = "https://api.edamam.com/api/nutrition-details"
-    params = {
-        "app_id": EDAMAM_APP_ID,
-        "app_key": EDAMAM_APP_KEY
-    }
-    body = {"ingr": ingredients}
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, params=params, json=body)
-        return response.json()
+params = {
+    "query": "chicken breast",   # nombre ya traducido al inglés
+    "api_key": USDA_API_KEY,
+    "pageSize": 1,
+    "dataType": "Foundation,SR Legacy",  # prioriza alimentos crudos/enteros
+}
 ```
 
 ### Respuesta relevante
 
 ```json
 {
-  "calories": 485,
-  "totalNutrients": {
-    "PROCNT": { "quantity": 52.3, "unit": "g" },  // Proteína
-    "CHOCDF": { "quantity": 44.1, "unit": "g" },  // Hidratos
-    "FAT":    { "quantity": 8.2,  "unit": "g" }   // Grasas
-  }
+  "foods": [
+    {
+      "description": "Chicken, broilers or fryers, breast, meat only, raw",
+      "foodNutrients": [
+        { "nutrientId": 1008, "nutrientName": "Energy",                    "value": 120 },
+        { "nutrientId": 1003, "nutrientName": "Protein",                   "value": 22.5 },
+        { "nutrientId": 1005, "nutrientName": "Carbohydrate, by difference","value": 0 },
+        { "nutrientId": 1004, "nutrientName": "Total lipid (fat)",          "value": 2.62 }
+      ]
+    }
+  ]
 }
 ```
 
-### Notas importantes
-- El formato de ingredientes es texto libre en inglés: `"150g chicken breast"`
-- Si un ingrediente no se reconoce, la API devuelve error 555 → manejar con fallback
-- **Caché planificado en Fase 9**: guardar resultado en SQLite por `(nombre_ingrediente, cantidad)` para no repetir llamadas
+Los valores ya están expresados por 100g — no es necesario normalizar.
+
+### IDs de nutrientes usados
+
+| ID   | Nutriente               | Campo interno |
+|------|-------------------------|---------------|
+| 1008 | Energy                  | `kcal_100g`   |
+| 1003 | Protein                 | `prot_100g`   |
+| 1005 | Carbohydrate (by diff.) | `hc_100g`     |
+| 1004 | Total lipid (fat)       | `fat_100g`    |
+
+### Manejo de errores
+
+| Situación                  | Comportamiento                              |
+|----------------------------|---------------------------------------------|
+| Ingrediente no encontrado  | Devuelve `NutritionResult` con todos 0      |
+| `USDA_API_KEY` vacía       | Devuelve `NutritionResult` con todos 0      |
+| HTTP 403 (clave inválida)  | Lanza `USDAAuthError` → endpoint devuelve **403** |
+| Otro error HTTP / red      | Lanza `RuntimeError` → endpoint devuelve **502** |
 
 ---
 
 ## 2. Unsplash — Image Search API
 
-**Tier gratuito:** 50 requests/hora ✅ (modo Demo)  
+**Tier gratuito:** 50 requests/hora ✅ (modo Demo)
 **Uso en el proyecto:** Mostrar carrusel de 3-5 imágenes al crear/sugerir receta
 
 ### Pasos de registro
 
-- [ ] Ir a [unsplash.com/developers](https://unsplash.com/developers)
-- [ ] Click en **"Your apps"** → **"New Application"**
-- [ ] Aceptar términos (uso no comercial / demo está bien para uso personal)
-- [ ] Nombre: `recipe-manager-mvp`
-- [ ] Descripción: `Personal recipe manager app`
-- [ ] Copiar **"Access Key"** → `UNSPLASH_ACCESS_KEY`
-- [ ] (Ignorar el Secret Key, no lo necesitamos)
+- [X] Ir a [unsplash.com/developers](https://unsplash.com/developers)
+- [X] Click en **"Your apps"** → **"New Application"**
+- [X] Aceptar términos (uso no comercial / demo está bien para uso personal)
+- [X] Nombre: `recipe-manager-mvp`
+- [X] Copiar **"Access Key"** → `UNSPLASH_ACCESS_KEY`
 
 ### Ejemplo de llamada
 
 ```python
 # GET https://api.unsplash.com/search/photos
 
-async def search_images(query: str, count: int = 5) -> list[str]:
-    url = "https://api.unsplash.com/search/photos"
-    params = {
-        "query": query,
-        "per_page": count,
-        "orientation": "landscape",
-        "client_id": UNSPLASH_ACCESS_KEY
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params)
-        data = response.json()
-        # Devolver URLs de las imágenes en tamaño "regular" (~1080px)
-        return [photo["urls"]["regular"] for photo in data["results"]]
+params = {
+    "query": query,
+    "per_page": count,           # máx 30
+    "orientation": "landscape",
+    "client_id": UNSPLASH_ACCESS_KEY,
+}
+# Devuelve: [photo["urls"]["regular"] for photo in data["results"]]
 ```
+
+### Manejo de errores
+
+| Situación                  | Comportamiento                                        |
+|----------------------------|-------------------------------------------------------|
+| `UNSPLASH_ACCESS_KEY` vacía | Devuelve lista vacía `[]`                            |
+| HTTP 401 (token inválido)  | Lanza `UnsplashAuthError` → endpoint devuelve **403** |
+| Otro error HTTP / red      | Lanza `RuntimeError` → endpoint devuelve **502**      |
 
 ### Notas importantes
 - Usar `urls.regular` (no `full`) — buen balance calidad/tamaño
-- Los queries en inglés dan mejores resultados: traducir nombre de receta si hace falta
 - Solo guardamos la URL elegida por el usuario (no descargamos la imagen)
 
 ---
 
 ## 3. OpenAI — GPT-4o mini
 
-**Tier gratuito:** ❌ Requiere saldo (prepago)  
-**Coste estimado:** ~$0.01-0.05 por sugerencia de receta (muy barato)  
-**Uso en el proyecto:** Despensa Virtual — sugerir receta a partir de ingredientes disponibles
+**Tier gratuito:** ❌ Requiere saldo (prepago)
+**Coste estimado:** ~$0.01-0.05 por sugerencia de receta + ~$0.0001 por traducción de ingrediente
+**Uso en el proyecto:**
+  1. **Despensa Virtual** — sugerir receta a partir de ingredientes disponibles
+  2. **Traducción de ingredientes** — convertir nombres en español a inglés antes de consultar USDA
 
 ### Pasos de configuración
 
-- [ ] Ir a [platform.openai.com](https://platform.openai.com)
-- [ ] Crear cuenta o iniciar sesión
-- [ ] Ir a **"Billing"** → añadir método de pago → cargar $5-10 (dura meses)
-- [ ] Ir a **"API Keys"** → **"Create new secret key"**
-- [ ] Copiar clave → `OPENAI_API_KEY`
-- [ ] Instalar librería: `pip install openai`
+- [X] Ir a [platform.openai.com](https://platform.openai.com)
+- [X] Ir a **"Billing"** → añadir método de pago → cargar $5-10 (dura meses)
+- [X] Ir a **"API Keys"** → **"Create new secret key"**
+- [X] Copiar clave → `OPENAI_API_KEY`
 
-### Ejemplo de llamada y prompt
+### Uso 1 — Traducción de ingredientes (en `services/usda.py`)
 
 ```python
-from openai import AsyncOpenAI
+# Llamada mínima: temperature=0, max_tokens=20
+response = await client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": "Translate the food ingredient to English. "
+                                      "Reply with ONLY the translated ingredient name."},
+        {"role": "user", "content": "pechuga de pollo"},
+    ],
+    temperature=0,
+    max_tokens=20,
+)
+# → "chicken breast"
+```
 
-client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+### Uso 2 — Sugerencia de receta (en `services/openai_service.py`)
 
-SYSTEM_PROMPT = """Eres un chef experto en nutrición. 
-Cuando el usuario te dé una lista de ingredientes disponibles, 
-propón UNA receta completa y devuelve SOLO un JSON válido con esta estructura exacta:
+```python
+SYSTEM_PROMPT = """Eres un chef experto en nutrición.
+Propón UNA receta y devuelve SOLO un JSON válido con esta estructura:
 {
   "name": "Nombre de la receta",
   "category_suggestion": "Comida",
   "servings": 2,
   "instructions_text": "Instrucciones paso a paso...",
   "ingredients": [
-    {"name": "Pechuga de pollo", "quantity_g": 200},
-    {"name": "Arroz integral", "quantity_g": 100}
+    {"name": "Pechuga de pollo", "quantity_g": 200}
   ]
 }
 No incluyas texto fuera del JSON."""
-
-async def suggest_recipe(available_ingredients: list[str]) -> dict:
-    ingredients_text = ", ".join(available_ingredients)
-    
-    response = await client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"Ingredientes disponibles: {ingredients_text}"}
-        ],
-        temperature=0.7,
-        max_tokens=800
-    )
-    
-    import json
-    return json.loads(response.choices[0].message.content)
 ```
 
-### Notas importantes
-- Usar `gpt-4o-mini` (NO `gpt-4o`) — 10x más barato, suficiente calidad para recetas
-- El prompt pide JSON estricto → parsear con `json.loads()` + try/except
-- Si el parsing falla, reintentar con `temperature=0` para respuesta más predecible
-- La receta sugerida se **pre-rellena en el formulario** para que el usuario revise antes de guardar (no se guarda automáticamente)
+### Manejo de errores
+
+| Situación                         | Comportamiento                                         |
+|-----------------------------------|--------------------------------------------------------|
+| `OPENAI_API_KEY` vacía            | Traducción: devuelve nombre original sin error         |
+| Clave inválida (`AuthenticationError`) | Lanza `OpenAIAuthError` → endpoint devuelve **403** |
+| JSON inválido en suggest_recipe   | Reintenta con `temperature=0`; si falla → **502**      |
+| Cualquier otro error en traducción | Devuelve nombre original (fallback silencioso)        |
 
 ---
 
 ## Script de Verificación de APIs
 
-Crear como `data/test_apis.py` y ejecutar una vez configurado el `.env`:
+Ejecutar desde la raíz con las claves ya configuradas en `.env`:
 
 ```python
-"""Script para verificar que las 3 APIs funcionan correctamente."""
+"""Script para verificar que las 3 APIs responden correctamente."""
 import asyncio
 import httpx
 import os
@@ -209,17 +237,26 @@ from openai import AsyncOpenAI
 
 load_dotenv()
 
-async def test_edamam():
-    print("🔍 Testando Edamam...")
-    url = "https://api.edamam.com/api/nutrition-details"
-    params = {"app_id": os.getenv("EDAMAM_APP_ID"), "app_key": os.getenv("EDAMAM_APP_KEY")}
+async def test_usda():
+    print("🥗 Testando USDA FoodData Central...")
+    url = "https://api.nal.usda.gov/fdc/v1/foods/search"
+    params = {
+        "query": "chicken breast",
+        "api_key": os.getenv("USDA_API_KEY"),
+        "pageSize": 1,
+        "dataType": "Foundation,SR Legacy",
+    }
     async with httpx.AsyncClient() as client:
-        r = await client.post(url, params=params, json={"ingr": ["100g chicken"]})
+        r = await client.get(url, params=params)
         if r.status_code == 200:
-            data = r.json()
-            print(f"  ✅ Edamam OK — {data['calories']} kcal para 100g pollo")
+            foods = r.json().get("foods", [])
+            if foods:
+                nutrients = {n["nutrientId"]: n["value"] for n in foods[0]["foodNutrients"]}
+                print(f"  ✅ USDA OK — chicken breast: {nutrients.get(1008, 0):.0f} kcal/100g")
+            else:
+                print("  ⚠️  USDA OK pero sin resultados para 'chicken breast'")
         else:
-            print(f"  ❌ Edamam ERROR: {r.status_code} — {r.text[:200]}")
+            print(f"  ❌ USDA ERROR: {r.status_code} — {r.text[:200]}")
 
 async def test_unsplash():
     print("🖼️  Testando Unsplash...")
@@ -240,14 +277,14 @@ async def test_openai():
         r = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": "Di solo: OK"}],
-            max_tokens=10
+            max_tokens=10,
         )
         print(f"  ✅ OpenAI OK — respuesta: {r.choices[0].message.content}")
     except Exception as e:
         print(f"  ❌ OpenAI ERROR: {e}")
 
 async def main():
-    await test_edamam()
+    await test_usda()
     await test_unsplash()
     await test_openai()
     print("\n✅ Test completado")

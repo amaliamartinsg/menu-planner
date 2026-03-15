@@ -39,7 +39,7 @@ class Recipe(SQLModel, table=True):
     image_url: str | None = None
     servings: int = Field(default=1)
 
-    # Macro totals — computed from ingredients via Edamam, stored for fast reads
+    # Macro totals — computed from ingredients via USDA, stored for fast reads
     kcal: float = Field(default=0)
     prot_g: float = Field(default=0)
     hc_g: float = Field(default=0)
@@ -54,18 +54,18 @@ class Recipe(SQLModel, table=True):
 class RecipeIngredient(SQLModel, table=True):
     """A single ingredient line within a Recipe.
 
-    Stores the per-100g macro values returned by Edamam so that macros
-    can be recalculated locally if servings or quantity changes.
+    Stores the per-100g macro values returned by USDA FoodData Central so
+    that macros can be recalculated locally if servings or quantity changes.
 
     Attributes:
         id: Primary key, auto-generated.
         recipe_id: FK to the parent Recipe.
         name: Ingredient name as entered by the user (e.g. 'Pechuga de pollo').
         quantity_g: Weight in grams for this ingredient in the recipe.
-        kcal_100g: Kilocalories per 100 g (from Edamam).
-        prot_100g: Protein grams per 100 g (from Edamam).
-        hc_100g: Carbohydrate grams per 100 g (from Edamam).
-        fat_100g: Fat grams per 100 g (from Edamam).
+        kcal_100g: Kilocalories per 100 g (from USDA).
+        prot_100g: Protein grams per 100 g (from USDA).
+        hc_100g: Carbohydrate grams per 100 g (from USDA).
+        fat_100g: Fat grams per 100 g (from USDA).
         recipe: Parent Recipe relationship.
     """
 
@@ -74,7 +74,7 @@ class RecipeIngredient(SQLModel, table=True):
     name: str
     quantity_g: float
 
-    # Per-100g values saved from Edamam for future recalculation
+    # Per-100g values saved from USDA for future recalculation
     kcal_100g: float = Field(default=0)
     prot_100g: float = Field(default=0)
     hc_100g: float = Field(default=0)

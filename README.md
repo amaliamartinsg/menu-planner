@@ -15,7 +15,7 @@ cp .env.example .env        # Rellenar con las claves API reales
 
 ```bash
 # Terminal 1 — Backend
-uvicorn backend.main:app --reload --port 8000
+uvicorn app.backend.main:app --reload --port 8000
 
 # Terminal 2 — Frontend
 python frontend/main.py

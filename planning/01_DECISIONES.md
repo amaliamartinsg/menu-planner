@@ -11,8 +11,12 @@
 |---|---|---|
 | Backend | **FastAPI** | Async nativo, validación Pydantic integrada, Swagger automático |
 | Base de datos | **SQLite + SQLModel** | Sin servidor, perfecto para uso local; SQLModel unifica modelos BD + Pydantic |
-| Frontend | **Flet** | Python puro, Material Design 3, multiplataforma |
-| Comunicación | **HTTP (httpx)** | FastAPI server en `localhost:8000` + Flet como cliente HTTP |
+| Frontend | **React 18 + TypeScript + Vite** | Ecosistema maduro, tipado end-to-end con los schemas Pydantic, HMR ultrarrápido |
+| UI Components | **Material UI (MUI) v5** | Implementación fiel de Material Design 3, ampliamente documentada |
+| Routing | **React Router v6** | Estándar de facto para SPAs React |
+| Estado servidor | **TanStack Query v5** | Cache + loading/error states automáticos para todas las llamadas API |
+| HTTP client | **Axios** | Interceptores globales de error, tipado sencillo |
+| Comunicación | **HTTP REST** | FastAPI en `localhost:8000` + React dev server en `localhost:5173` |
 | Macros ingredientes | **USDA FoodData Central** | Completamente gratuita y sin límite diario práctico |
 | Imágenes | **Unsplash API** | Gratuita (50 req/hora), alta calidad |
 | IA Despensa Virtual | **OpenAI GPT-4o mini** | Muy barato (~0.15$/1M tokens), buena calidad para recetas |
@@ -21,11 +25,12 @@
 
 ## Decisiones de Arquitectura
 
-### ¿Por qué FastAPI separado + Flet como cliente?
+### ¿Por qué FastAPI separado + React como cliente?
 - Permite testear la API con Swagger UI (`/docs`) de forma independiente
 - Separación clara de responsabilidades (backend vs frontend)
-- Reutilizable si en el futuro se hace versión web o móvil real
-- El coste en complejidad para uso local es mínimo (dos terminales)
+- React corre en el navegador — funciona como SPA real sin runtime de escritorio
+- El coste en complejidad para uso local es mínimo (dos terminales: uvicorn + vite dev)
+- CORS configurado en FastAPI para `http://localhost:5173` (Vite dev server)
 
 ### ¿Por qué SQLModel sobre SQLAlchemy puro?
 - Unifica modelos de BD y schemas Pydantic en una sola clase
@@ -96,14 +101,15 @@ Los 5 slots son **fijos** (no configurables en el MVP):
 
 ## Decisiones de UX/UI
 
-- **Material Design 3** mediante Flet
-- Navegación principal: Bottom Navigation Bar con 3 tabs
+- **Material Design 3** mediante Material UI (MUI) v5
+- Navegación principal: `<BottomNavigation>` de MUI con 3 tabs
   - 🍽️ Recetas
   - 📅 Menú
   - ⚙️ Ajustes
-- Diseño **responsivo** con `ft.ResponsiveRow` (adaptable a ventana pequeña tipo móvil)
-- Ajustes accesibles via **Modal** (no pantalla nueva) desde el icono de engranaje
-- Loading states en todas las llamadas async al backend
+- Diseño **responsivo** con el sistema Grid de MUI (`xs/sm/md` breakpoints)
+- Ajustes accesibles via `<Dialog>` modal (no ruta nueva) desde el icono de engranaje
+- Loading states con `CircularProgress` y skeleton en todas las llamadas al backend
+- TanStack Query gestiona cache, revalidación y estados loading/error automáticamente
 
 ---
 

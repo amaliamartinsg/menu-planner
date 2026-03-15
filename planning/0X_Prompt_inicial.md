@@ -56,25 +56,31 @@ archivos en este orden:
 - No uses `session.exec(select(...))` sin cerrar la sesión correctamente 
   (usa el patrón `with get_session() as session`)
 
-## Frontend Flet
-- Todos los componentes reutilizables van en `frontend/components/`
-- Las vistas completas van en `frontend/views/`
-- Nunca hagas llamadas HTTP directamente desde una vista — usa siempre 
-  el `APIClient` de `frontend/api_client.py`
-- Usa `ft.ResponsiveRow` para layouts adaptables
-- Los loading states se implementan con `ft.ProgressRing` o deshabilitando 
-  botones mientras se espera respuesta
+## Frontend React
+- Todos los componentes reutilizables van en `frontend/src/components/`
+- Las vistas completas van en `frontend/src/views/`
+- Los tipos TypeScript (espejo de schemas Pydantic) van en `frontend/src/types/`
+- Nunca hagas llamadas HTTP directamente desde una vista — usa siempre
+  un custom hook de `frontend/src/hooks/` que encapsule TanStack Query
+- Nunca llames Axios directamente desde hooks — toda la lógica HTTP va
+  en funciones de `frontend/src/api/` (una por dominio: recipes.ts, menu.ts, etc.)
+- Los loading states se implementan con `<CircularProgress>` de MUI o
+  deshabilitando botones con la prop `loading` / `disabled`
+- Usa el sistema Grid de MUI (`<Grid container>` / `<Grid item xs sm md>`) para layouts responsivos
+- Los errores de API se muestran con `<Snackbar>` + `<Alert severity="error">` de MUI
+- Usa `useQuery` para lecturas y `useMutation` para escrituras (TanStack Query)
+- Nombra los query keys de forma consistente: `['recipes']`, `['recipe', id]`, `['menu', weekStart]`
 
 ---
 
 # TAREA INICIAL
 
-Continúa por la **FASE 4 — Backend: Perfil y TDEE** definida en 04_PLAN_FASES.md.
+Continúa por la **FASE 5 — Frontend: Estructura Base** definida en 04_PLAN_FASES.md.
 
 Lee primero los checkboxes de esa fase y luego implementa cada punto en orden,
 confirmando cada uno antes de pasar al siguiente.
 
-El objetivo al final de la Fase 4 es:
--  El perfil calcula TDEE/BMR automáticamente y define los targets de macros.
+El objetivo al final de la Fase 5 es:
+-  App Flet navega entre 3 pantallas. Cliente HTTP conecta con el backend.
 
 Cuando termines cada archivo o grupo de archivos relacionados, no esperes mi confirmación antes de continuar con el siguiente. Cuando completes la fase entera, avísame de las comprobaciones que debo seguir para comprobar si está todo correcto.

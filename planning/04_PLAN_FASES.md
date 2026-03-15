@@ -191,140 +191,180 @@ FASE 9  [          ] 0%   Polish & Testing
 
 ## FASE 5 — Frontend: Estructura Base
 
-> **Objetivo:** App Flet navega entre 3 pantallas. Cliente HTTP conecta con el backend.  
-> **Dependencias:** FASE 0 + FASE 1 (necesita la BD con seed)  
+> **Objetivo:** App React navega entre 3 pantallas. Cliente HTTP conecta con el backend.
+> **Dependencias:** FASE 0 + FASE 1 (necesita la BD con seed)
 > **Duración estimada:** 1 sesión
 
-- [ ] Actualizar `app/frontend/api_client.py`
-  - [ ] Métodos async: `get()`, `post()`, `put()`, `delete()`
-  - [ ] Manejo de errores HTTP con excepciones tipadas
-  - [ ] Base URL configurable desde `.env` (en la raíz del proyecto)
-- [ ] Definir tema Material Design 3 en `app/frontend/main.py`
-  - [ ] Color primario (verde o naranja — sugerencia: `#4CAF50` o `#FF7043`)
-  - [ ] Fuente: Roboto (default de Flet)
-  - [ ] Modo claro/oscuro (opcional MVP: solo modo claro)
-- [ ] Crear layout principal con `ft.NavigationBar` (3 tabs: Recetas / Menú / Ajustes)
-- [ ] Implementar routing básico entre vistas (cambiar `page.views` al cambiar tab)
-- [ ] Crear vistas placeholder para las 3 pantallas con título y mensaje "En construcción"
-- [ ] Implementar `ft.ResponsiveRow` como contenedor base (adaptable a ancho de ventana)
-- [ ] Verificar que la navegación entre tabs funciona sin errores
+- [ ] Crear proyecto React con Vite dentro de `app/frontend/`:
+  - [ ] `npm create vite@latest . -- --template react-ts` (desde `app/frontend/`)
+  - [ ] Instalar dependencias del `package.json` definido en `05_DEPENDENCIAS.md`
+- [ ] Configurar `vite.config.ts` con proxy `/api` → `http://localhost:8000`
+- [ ] Crear `src/api/client.ts` — instancia Axios con `baseURL` desde `import.meta.env.VITE_BACKEND_URL`
+  - [ ] Interceptor de respuesta: extraer mensaje de error de FastAPI y relanzar como `Error`
+- [ ] Crear `src/theme.ts` — tema MUI con color primario (`#4CAF50` verde o `#FF7043` naranja)
+- [ ] Configurar `src/main.tsx`:
+  - [ ] `<QueryClientProvider>` con `QueryClient` (staleTime: 30s)
+  - [ ] `<ThemeProvider>` con el tema definido
+  - [ ] `<BrowserRouter>` de React Router
+- [ ] Crear `src/App.tsx` con layout principal:
+  - [ ] `<BottomNavigation>` de MUI con 3 tabs (Recetas / Menú / Ajustes)
+  - [ ] `<Routes>` con rutas: `/` → RecipesView, `/menu` → MenuView, `/settings` → SettingsView
+  - [ ] Sincronizar tab activo con la ruta actual (`useLocation`)
+- [ ] Crear vistas placeholder en `src/views/`:
+  - [ ] `RecipesView.tsx` — título + "En construcción"
+  - [ ] `MenuView.tsx` — título + "En construcción"
+  - [ ] `SettingsView.tsx` — título + "En construcción"
+- [ ] Verificar que la navegación entre tabs funciona sin errores en el navegador
+- [ ] Verificar que `src/api/client.ts` puede hacer un `GET /profile` y recibir datos del backend
 
 ---
 
 ## FASE 6 — Frontend: Pantalla A (Gestión de Recetas)
 
-> **Objetivo:** El usuario puede ver, crear, editar y eliminar recetas con imagen y macros.  
-> **Dependencias:** FASE 2 + FASE 5  
+> **Objetivo:** El usuario puede ver, crear, editar y eliminar recetas con imagen y macros.
+> **Dependencias:** FASE 2 + FASE 5
 > **Duración estimada:** 2-3 sesiones
 
+### Tipos y API layer
+- [ ] Crear `src/types/recipe.ts` — interfaces `Recipe`, `RecipeCreate`, `RecipeUpdate`, `RecipeIngredient`
+- [ ] Crear `src/types/category.ts` — interfaces `Category`, `SubCategory`
+- [ ] Crear `src/api/recipes.ts` — funciones: `getRecipes(filters?)`, `getRecipe(id)`, `createRecipe`, `updateRecipe`, `deleteRecipe`, `suggestRecipe`, `searchImages`
+- [ ] Crear `src/api/categories.ts` — función `getCategories()`
+- [ ] Crear `src/hooks/useRecipes.ts`:
+  - [ ] `useRecipes(filters)` — `useQuery(['recipes', filters], ...)`
+  - [ ] `useRecipe(id)` — `useQuery(['recipe', id], ...)`
+  - [ ] `useCreateRecipe()`, `useUpdateRecipe()`, `useDeleteRecipe()` — `useMutation` con `invalidateQueries`
+
 ### Componentes reutilizables
-- [ ] Crear `app/frontend/components/recipe_card.py`
-  - [ ] Imagen (con fallback si no hay URL)
+- [ ] Crear `src/components/RecipeCard.tsx`
+  - [ ] `<Card>` MUI con imagen (con fallback si no hay URL)
   - [ ] Nombre y subcategoría
-  - [ ] Macros resumen (kcal, prot, hc, fat) en chips pequeños
-  - [ ] Botones editar/eliminar en hover
-- [ ] Crear `app/frontend/components/image_carousel.py`
-  - [ ] Mostrar 3-5 imágenes en fila horizontal scrollable
-  - [ ] Estado "seleccionada" (borde/overlay al hacer click)
-  - [ ] Loading state mientras carga Unsplash
-- [ ] Crear `app/frontend/components/macro_progress_bar.py`
-  - [ ] 4 barras: kcal, prot, hc, fat
-  - [ ] Colores distintos por macro
-  - [ ] Mostrar valor actual / objetivo y porcentaje
+  - [ ] Macros resumen (kcal, prot, hc, fat) en `<Chip>` pequeños
+  - [ ] Botones editar/eliminar (iconos) visibles en hover (`CardActions`)
+- [ ] Crear `src/components/ImageCarousel.tsx`
+  - [ ] Fila horizontal scrollable (`display: flex, overflowX: auto`)
+  - [ ] Estado "seleccionada" (borde con color primario al hacer click)
+  - [ ] `<Skeleton>` mientras carga Unsplash
+- [ ] Crear `src/components/MacroProgressBar.tsx`
+  - [ ] 4 `<LinearProgress>` con label: kcal, prot, hc, fat
+  - [ ] Colores distintos por macro (`color` prop o `sx`)
+  - [ ] Mostrar valor actual / objetivo debajo de cada barra
 
 ### Vista principal de recetas
-- [ ] Crear `app/frontend/views/recipes_view.py`
-  - [ ] Grid responsivo de `RecipeCard` (2 cols en móvil, 3-4 en escritorio)
-  - [ ] Chips de filtro horizontal (categorías) — scroll horizontal si hay muchas
+- [ ] Crear `src/views/RecipesView.tsx`
+  - [ ] Grid MUI responsivo de `<RecipeCard>` (`xs=12 sm=6 md=4 lg=3`)
+  - [ ] Chips de filtro horizontal (categorías) — `<Box sx={{ overflowX: 'auto' }}>` con `<Chip>`
   - [ ] Sub-chips de subcategoría (aparecen al seleccionar categoría)
-  - [ ] Campo de búsqueda por nombre
-  - [ ] FAB (+) en esquina inferior derecha
-  - [ ] Empty state con mensaje si no hay recetas
-  - [ ] Loading state al cargar
+  - [ ] `<TextField>` de búsqueda por nombre (con debounce ~300ms)
+  - [ ] `<Fab>` (+) en posición fija esquina inferior derecha
+  - [ ] Empty state con `<Typography>` + icono si no hay recetas
+  - [ ] `<Skeleton>` grid mientras carga (usar `isLoading` de TanStack Query)
 
 ### Formulario de receta
-- [ ] Crear `app/frontend/views/recipe_form.py`
-  - [ ] Campos: nombre, categoría (dropdown), subcategoría (dropdown), raciones
-  - [ ] Campo de instrucciones (textarea multilínea)
-  - [ ] Sección ingredientes dinámica:
-    - [ ] Botón "Añadir ingrediente" → fila con (nombre, cantidad en gramos)
-    - [ ] Botón eliminar por fila
+- [ ] Crear `src/views/RecipeForm.tsx` (como `<Dialog>` fullScreen en móvil, modal en escritorio)
+  - [ ] Campos: nombre (`<TextField>`), categoría (`<Select>`), subcategoría (`<Select>`), raciones
+  - [ ] Campo instrucciones (`<TextField multiline rows={4}>`)
+  - [ ] Sección ingredientes dinámica (array con `useState`):
+    - [ ] Botón "Añadir ingrediente" → añade fila con (nombre, cantidad en gramos)
+    - [ ] Botón eliminar por fila (`<IconButton>`)
     - [ ] Mínimo 1 ingrediente para poder guardar
   - [ ] Sección imagen:
-    - [ ] Botón "Buscar imágenes" → llama a `/recipes/images` → muestra `ImageCarousel`
-    - [ ] Campo URL manual como alternativa
-  - [ ] Botón "Guardar" → llama a POST/PUT → muestra macros calculados en un snackbar
-  - [ ] Modo edición (pre-rellena campos con datos existentes)
+    - [ ] Botón "Buscar imágenes" → llama a `searchImages` → muestra `<ImageCarousel>`
+    - [ ] `<TextField>` URL manual como alternativa
+  - [ ] Botón "Guardar" → llama a `createRecipe`/`updateRecipe` → `<Snackbar>` con macros calculados
+  - [ ] Modo edición: recibe `recipe` como prop opcional (pre-rellena `useForm` con `defaultValues`)
+  - [ ] Usar `react-hook-form` para validación y gestión del formulario
 
 ### Despensa Virtual
-- [ ] Añadir botón "Sugerir receta" en la vista de recetas (junto al FAB o en el FAB expandido)
-- [ ] Modal/bottom sheet: input de ingredientes disponibles (chips añadibles)
-- [ ] Botón "Sugerir" → llama a `/recipes/suggest` → loading state
-- [ ] Resultado: abre el formulario de receta pre-rellenado con la sugerencia de GPT
+- [ ] Botón "Sugerir receta" junto al FAB (SpeedDial o segundo botón)
+- [ ] `<Dialog>`: input de ingredientes disponibles (chips añadibles con `<TextField>` + Enter)
+- [ ] Botón "Sugerir" → llama a `suggestRecipe` → `<CircularProgress>` mientras espera
+- [ ] Resultado: abre `<RecipeForm>` pre-rellenado con los datos de GPT
 - [ ] Usuario revisa y puede editar antes de guardar
 
 ---
 
 ## FASE 7 — Frontend: Pantalla B (Menú Semanal)
 
-> **Objetivo:** El usuario puede gestionar el menú semanal y ver macros por día.  
-> **Dependencias:** FASE 3 + FASE 5  
+> **Objetivo:** El usuario puede gestionar el menú semanal y ver macros por día.
+> **Dependencias:** FASE 3 + FASE 5
 > **Duración estimada:** 2-3 sesiones
 
+### Tipos, API layer y hooks
+- [ ] Crear `src/types/menu.ts` — interfaces `MenuWeek`, `MenuDay`, `MenuSlot`, `SlotType`, `DayMacrosSummary`
+- [ ] Crear `src/types/extra.ts` — interfaces `Extra`, `MenuDayExtra`
+- [ ] Crear `src/api/menu.ts` — funciones: `getWeeks`, `getWeek(weekStart)`, `createWeek`, `updateSlot`, `autofill`, `addExtra`, `removeExtra`
+- [ ] Crear `src/api/extras.ts` — funciones: `getExtras`, `createExtra`, `updateExtra`, `deleteExtra`
+- [ ] Crear `src/hooks/useMenu.ts`:
+  - [ ] `useWeek(weekStart)` — `useQuery(['menu', weekStart], ...)`
+  - [ ] `useUpdateSlot()` — `useMutation` con invalidate de `['menu', weekStart]`
+  - [ ] `useAutofill(weekStart)` — `useMutation` con invalidate de la semana
+
 ### Vista principal del menú
-- [ ] Crear `app/frontend/views/menu_view.py`
-  - [ ] Cabecera con: semana actual (ej: "3-7 Jun 2025"), flechas ← →
-  - [ ] Grid 5 columnas (L-V) × 5 filas (slots) — o vista apilada en móvil
-  - [ ] Cada celda muestra: nombre receta (truncado) + kcal, o "+" si vacía
-  - [ ] Tap en celda vacía → bottom sheet selector de receta
-  - [ ] Tap en celda con receta → opciones: cambiar / quitar
-  - [ ] Botón "Rellenar huecos" (llamar a autofill) con loading state
-  - [ ] Tap en cabecera de día (Lunes, Martes...) → `DayDetailView`
-  - [ ] Indicador de % de kcal diarias completadas bajo cada columna de día
+- [ ] Crear `src/views/MenuView.tsx`
+  - [ ] Cabecera con: semana actual (ej: "3-7 Jun 2025"), `<IconButton>` flechas ← →
+  - [ ] Grid 5 columnas (L-V) × 5 filas (slots) con MUI `<Table>` o CSS Grid — apilado en móvil (`xs`)
+  - [ ] Cada celda: nombre receta truncado + kcal, o botón "+" si vacía
+  - [ ] Click en celda → abre `<RecipeSelectorDialog>`
+  - [ ] Click en celda con receta → menú contextual: cambiar / quitar (`<Menu>` MUI)
+  - [ ] Botón "Rellenar huecos" → llama a `useAutofill` → `<CircularProgress>` mientras procesa
+  - [ ] Click en cabecera de día → abre `<DayDetailDialog>`
+  - [ ] `<LinearProgress>` de % kcal bajo cada columna de día
 
 ### Selector de receta
-- [ ] Bottom sheet con búsqueda de recetas por nombre
-- [ ] Filtro por categoría compatible con el slot seleccionado
-- [ ] Cada resultado muestra nombre + kcal + macros para decidir rápido
+- [ ] Crear `src/components/RecipeSelectorDialog.tsx` (`<Dialog>`)
+  - [ ] `<TextField>` búsqueda de recetas por nombre
+  - [ ] Filtro por categoría compatible con el `SlotType` seleccionado
+  - [ ] Lista de resultados: nombre + kcal + chips de macros
+  - [ ] Click en resultado → llama a `useUpdateSlot` y cierra el dialog
 
 ### Detalle de día
-- [ ] Crear `app/frontend/views/day_detail_view.py`
+- [ ] Crear `src/views/DayDetailView.tsx` (como `<Dialog>` fullScreen)
   - [ ] Título con fecha del día
-  - [ ] Lista de slots con: nombre slot, nombre receta, macros de esa receta
-  - [ ] `MacroProgressBar` con totales del día vs objetivo del perfil
+  - [ ] Lista de slots: `<List>` con nombre slot + nombre receta + macros
+  - [ ] `<MacroProgressBar>` con totales del día vs objetivo del perfil
   - [ ] Sección "Extras del día":
-    - [ ] Lista de extras ya añadidos con cantidad y sus macros
-    - [ ] Botón "+" → lista de extras predefinidos (del GET /extras)
-    - [ ] Cada extra tiene stepper de cantidad (×1, ×2, etc.)
-    - [ ] Macros del `MacroProgressBar` se actualizan en tiempo real
+    - [ ] Lista de extras añadidos con cantidad y macros (`<List>`)
+    - [ ] Botón "+" → `<Dialog>` con lista de extras predefinidos
+    - [ ] Stepper de cantidad por extra (`<IconButton>` - / +)
+    - [ ] `<MacroProgressBar>` se recalcula automáticamente al mutar (TanStack Query invalida)
 
 ---
 
 ## FASE 8 — Frontend: Pantalla C (Ajustes)
 
-> **Objetivo:** El usuario configura su perfil, objetivos y gestiona categorías/extras.  
-> **Dependencias:** FASE 4 + FASE 5  
+> **Objetivo:** El usuario configura su perfil, objetivos y gestiona categorías/extras.
+> **Dependencias:** FASE 4 + FASE 5
 > **Duración estimada:** 1-2 sesiones
 
-- [ ] Crear `app/frontend/views/settings_view.py` (abierta como modal o drawer)
+### Tipos, API layer y hooks
+- [ ] Crear `src/types/profile.ts` — interfaces `Profile`, `ActivityLevel`, `Goal`, `TdeePreview`
+- [ ] Crear `src/api/profile.ts` — funciones: `getProfile`, `updateProfile`, `calculateTdee`
+- [ ] Crear `src/hooks/useProfile.ts`:
+  - [ ] `useProfile()` — `useQuery(['profile'], ...)`
+  - [ ] `useUpdateProfile()` — `useMutation` con invalidate de `['profile']`
+  - [ ] `useCalculateTdee()` — `useMutation` para preview sin guardar
+
+### Vista de Ajustes
+- [ ] Crear `src/views/SettingsView.tsx` (como `<Dialog>` fullScreen o ruta dedicada `/settings`)
 - [ ] **Sección Perfil y Objetivos**
-  - [ ] Campos: peso, altura, edad
-  - [ ] Selector género (Radio buttons: Hombre / Mujer)
-  - [ ] Selector nivel de actividad (Dropdown con 5 opciones)
-  - [ ] Selector objetivo (Déficit / Mantenimiento / Superávit)
-  - [ ] Preview TDEE en tiempo real (llamar a `POST /profile/calculate-tdee`)
-  - [ ] Sliders para ratio de macros (prot% / hc% / fat%) con suma visible
-  - [ ] Validación: los 3 porcentajes deben sumar exactamente 100%
-  - [ ] Botón "Guardar perfil"
+  - [ ] Campos peso/altura/edad con `<TextField type="number">`
+  - [ ] Selector género (`<RadioGroup>`: Hombre / Mujer)
+  - [ ] Selector nivel de actividad (`<Select>` con 5 opciones)
+  - [ ] Selector objetivo (`<ToggleButtonGroup>`: Déficit / Mantenimiento / Superávit)
+  - [ ] Preview TDEE en tiempo real: `useCalculateTdee` con `useDebouncedCallback` (500ms)
+  - [ ] `<Slider>` para ratio de macros prot/hc/fat + `<Typography>` con la suma
+  - [ ] Validación: los 3 porcentajes deben sumar 100% (mostrar error con `<Alert>`)
+  - [ ] Botón "Guardar perfil" → `useUpdateProfile`
 - [ ] **Sección Categorías**
-  - [ ] Lista de categorías con botón editar/eliminar
-  - [ ] Expandir categoría → lista de subcategorías editables
-  - [ ] Botón "Nueva categoría" → formulario inline
-  - [ ] Botón "Nueva subcategoría" por categoría
+  - [ ] `<List>` de categorías con botones editar/eliminar (`<IconButton>`)
+  - [ ] `<Collapse>` al expandir → lista de subcategorías editables inline
+  - [ ] Botón "Nueva categoría" → `<TextField>` inline con confirmación
+  - [ ] Botón "Nueva subcategoría" por cada categoría
 - [ ] **Sección Extras Rápidos**
-  - [ ] Lista de extras predefinidos con sus macros
+  - [ ] `<List>` de extras predefinidos con macros
   - [ ] Botón editar/eliminar por extra
-  - [ ] Formulario "Nuevo extra": nombre, kcal, prot, hc, fat
+  - [ ] Formulario "Nuevo extra" con `<TextField>` para nombre, kcal, prot, hc, fat
 
 ---
 
@@ -335,10 +375,11 @@ FASE 9  [          ] 0%   Polish & Testing
 > **Duración estimada:** 1-2 sesiones
 
 ### Robustez
-- [ ] Manejo global de errores HTTP en `api_client.py` → mostrar snackbar de error
-- [ ] Loading states en TODAS las llamadas async (ninguna debería bloquearse silenciosamente)
+- [ ] Interceptor global de errores en `src/api/client.ts` → extrae mensaje de FastAPI y lanza `Error`
+- [ ] `onError` global en `QueryClient` → muestra `<Snackbar>` con el mensaje de error
+- [ ] Loading states en TODAS las queries y mutations (`isLoading`, `isPending`)
 - [ ] Empty states con mensajes útiles en: listado de recetas, días del menú vacíos
-- [ ] Validaciones completas en todos los formularios:
+- [ ] Validaciones completas en todos los formularios con `react-hook-form`:
   - [ ] Receta: nombre obligatorio, mínimo 1 ingrediente, cantidades > 0
   - [ ] Perfil: peso/altura/edad en rangos razonables, porcentajes suman 100%
   - [ ] Extras: nombre obligatorio, kcal > 0

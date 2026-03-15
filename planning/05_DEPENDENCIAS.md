@@ -21,10 +21,7 @@ python-dotenv>=1.0.0       # Carga el archivo .env
 httpx>=0.27.0              # Cliente HTTP async (USDA, Unsplash)
 openai>=1.30.0             # SDK oficial OpenAI (GPT-4o mini)
 
-# ─────────────────────────────────────────
-# FRONTEND — Flet
-# ─────────────────────────────────────────
-flet>=0.22.0               # UI framework Python (Material Design 3)
+# (Frontend React — ver sección Node.js más abajo, no va en requirements.txt)
 
 # ─────────────────────────────────────────
 # UTILIDADES
@@ -91,14 +88,20 @@ uvicorn app.backend.main:app --reload --port 8000
 # http://localhost:8000/redoc → ReDoc
 ```
 
-### 6. Arrancar el frontend (nueva terminal)
+### 6. Setup e instalación del frontend React
 
 ```bash
-# Activar .venv también en esta terminal
-source .venv/bin/activate
-
 # Desde la raíz del proyecto
-python app/frontend/main.py
+cd app/frontend
+npm install
+```
+
+### 7. Arrancar el frontend (nueva terminal)
+
+```bash
+cd app/frontend
+npm run dev
+# → http://localhost:5173
 ```
 
 ---
@@ -169,6 +172,86 @@ code --install-extension qwtel.sqlite-viewer
 
 ### Herramientas externas
 - **DB Browser for SQLite**: Aplicación de escritorio para inspeccionar la BD — [sqlitebrowser.org](https://sqlitebrowser.org)
+
+---
+
+## Frontend React — package.json
+
+```json
+{
+  "name": "pyplanner-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-router-dom": "^6.26.0",
+    "@mui/material": "^5.16.0",
+    "@mui/icons-material": "^5.16.0",
+    "@emotion/react": "^11.13.0",
+    "@emotion/styled": "^11.13.0",
+    "@tanstack/react-query": "^5.51.0",
+    "axios": "^1.7.0",
+    "react-hook-form": "^7.52.0",
+    "use-debounce": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "typescript": "^5.5.0",
+    "vite": "^5.3.0"
+  }
+}
+```
+
+## Frontend React — vite.config.ts
+
+```typescript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
+})
+```
+
+> Nota: Con el proxy, las llamadas a `/api/recipes` desde React apuntan automáticamente a `http://localhost:8000/recipes`. Sin CORS issues en desarrollo.
+
+## Frontend React — Variables de entorno
+
+Crear `app/frontend/.env`:
+```
+VITE_BACKEND_URL=http://localhost:8000
+```
+
+Añadir `app/frontend/.env` al `.gitignore`.
+
+## Comandos útiles del frontend
+
+```bash
+# Instalar una dependencia nueva
+cd app/frontend && npm install nombre-paquete
+
+# Compilar para producción
+cd app/frontend && npm run build
+
+# Verificar tipos TypeScript
+cd app/frontend && npx tsc --noEmit
+```
 
 ---
 

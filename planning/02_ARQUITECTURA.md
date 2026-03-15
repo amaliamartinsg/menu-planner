@@ -57,22 +57,43 @@ pyplanner/                             # Raíz del proyecto
     │       ├── test_tdee.py
     │       └── test_menu_generator.py
     │
-    ├── frontend/                      # Flet app (se ejecuta por separado)
-    │   ├── main.py                    # Entry point Flet + routing
-    │   ├── api_client.py              # Cliente HTTP (httpx) → localhost:8000
-    │   ├── views/
-    │   │   ├── __init__.py
-    │   │   ├── recipes_view.py        # Pantalla A: grid + filtros de categoría
-    │   │   ├── recipe_form.py         # Formulario crear/editar receta
-    │   │   ├── menu_view.py           # Pantalla B: grid L-V × 5 slots
-    │   │   ├── day_detail_view.py     # Detalle día: macros + extras
-    │   │   └── settings_view.py       # Pantalla C: perfil + categorías + extras
-    │   └── components/                # Widgets Flet reutilizables
-    │       ├── __init__.py
-    │       ├── recipe_card.py         # Tarjeta receta (imagen, nombre, macros)
-    │       ├── macro_progress_bar.py  # Barra progreso prot/hc/fat/kcal vs objetivo
-    │       ├── image_carousel.py      # Carrusel selección imagen (3-5 fotos)
-    │       └── extra_quick_panel.py   # Panel lateral extras rápidos
+    ├── frontend/                      # React app (Vite + TypeScript)
+    │   ├── package.json               # Dependencias npm
+    │   ├── vite.config.ts             # Proxy /api → localhost:8000 en dev
+    │   ├── tsconfig.json
+    │   ├── index.html                 # Entry point HTML
+    │   └── src/
+    │       ├── main.tsx               # Monta <App/> + QueryClientProvider
+    │       ├── App.tsx                # ThemeProvider + Router + BottomNavigation
+    │       ├── theme.ts               # Tema MUI (color primario, tipografía)
+    │       ├── api/                   # Capa HTTP — solo vive aquí
+    │       │   ├── client.ts          # Instancia Axios (baseURL desde VITE_BACKEND_URL)
+    │       │   ├── recipes.ts         # Funciones fetch: getRecipes, createRecipe, etc.
+    │       │   ├── menu.ts            # getWeek, updateSlot, autofill, etc.
+    │       │   ├── categories.ts      # getCategories, createCategory, etc.
+    │       │   ├── extras.ts          # getExtras, createExtra, etc.
+    │       │   └── profile.ts         # getProfile, updateProfile, calcTdee
+    │       ├── types/                 # Interfaces TypeScript (espejo de schemas Pydantic)
+    │       │   ├── recipe.ts          # Recipe, RecipeCreate, RecipeIngredient
+    │       │   ├── menu.ts            # MenuWeek, MenuDay, MenuSlot, SlotType
+    │       │   ├── category.ts        # Category, SubCategory
+    │       │   ├── extra.ts           # Extra, MenuDayExtra
+    │       │   └── profile.ts         # Profile, ActivityLevel, Goal
+    │       ├── hooks/                 # Custom hooks (TanStack Query)
+    │       │   ├── useRecipes.ts      # useRecipes(), useRecipe(id), useMutateRecipe()
+    │       │   ├── useMenu.ts         # useWeek(), useUpdateSlot(), useAutofill()
+    │       │   └── useProfile.ts      # useProfile(), useUpdateProfile()
+    │       ├── views/                 # Pantallas principales (una por tab)
+    │       │   ├── RecipesView.tsx    # Grid + filtros de categoría
+    │       │   ├── RecipeForm.tsx     # Formulario crear/editar receta (modal o ruta)
+    │       │   ├── MenuView.tsx       # Grid L-V × 5 slots
+    │       │   ├── DayDetailView.tsx  # Detalle día: macros + extras
+    │       │   └── SettingsView.tsx   # Dialog: perfil + categorías + extras
+    │       └── components/            # Componentes React reutilizables
+    │           ├── RecipeCard.tsx     # Tarjeta receta (imagen, nombre, macros)
+    │           ├── MacroProgressBar.tsx # Barras kcal/prot/hc/fat vs objetivo
+    │           ├── ImageCarousel.tsx  # Selección imagen Unsplash
+    │           └── ExtraQuickPanel.tsx # Panel extras rápidos del día
     │
     └── data/
         └── seed.py                    # Script de datos iniciales (categorías, perfil)
@@ -303,4 +324,36 @@ Para cada día (L-V):
     4. De las recetas que caben en el presupuesto restante, elegir aleatoriamente
     5. Si no hay ninguna que quepa, elegir la de menor kcal disponible
     6. Asignar recipe_id al slot
+```
+
+---
+
+## Diagrama de Procesos (Arranque)
+
+```
+Terminal 1:                          Terminal 2:
+─────────────────────────────────    ─────────────────────────────────
+$ source .venv/bin/activate          $ cd app/frontend
+$ uvicorn app.backend.main:app       $ npm run dev
+  --reload --port 8000
+                                       Vite dev server running
+  FastAPI server running               → http://localhost:5173
+  → localhost:8000                     → HMR activo
+  → SQLite DB created/connected        → proxy /api/* → localhost:8000
+  → All tables created
+```
+
+## Consideraciones CORS
+
+FastAPI debe permitir el origen `http://localhost:5173` (Vite dev server).
+En producción, añadir el dominio real a `allow_origins`.
+
+```python
+# app/backend/main.py
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 ```
